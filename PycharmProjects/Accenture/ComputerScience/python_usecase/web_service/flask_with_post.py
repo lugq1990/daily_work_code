@@ -1,0 +1,1 @@
+# -*- coding:utf-8 -*-"""Created at 11:09 AM 12/24/2019This is to post request to flask API@author: guangqiang.lu"""import requestsfrom sklearn.datasets import load_irisimport jsonx, y = load_iris(return_X_y=True)url = 'http://localhost:5000/predict'obj = [{'data': x[0].tolist()}]res = requests.post(url, json = json.dumps(obj))print(res.text)

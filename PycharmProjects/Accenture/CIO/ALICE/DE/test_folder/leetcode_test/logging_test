@@ -1,0 +1,7 @@
+18:37:19,827 root INFO start to test.
+18:37:19,828 __main__ INFO go go go.
+18:37:46,404 root INFO start to test.
+18:37:46,404 __main__ INFO go go go.
+18:39:26,434 root INFO start to test.
+18:39:26,434 __main__ INFO go go go.
+18:39:26,434 __main__ ERROR This should been stored into the logging file.

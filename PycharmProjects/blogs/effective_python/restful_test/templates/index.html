@@ -1,0 +1,40 @@
+
+
+
+
+{% extends 'base.html' %}
+{% block head %}
+
+{% endblock %}
+
+{% block body %}
+<div>
+    <h1>iris prediction</h1>
+
+    <form action="/predict" method='post'>
+        <div>
+            <p>a</p>
+            <input type="text" name='a', id='a'>
+        </div>
+
+        <div>
+            <p>b</p>
+            <input type="text" name ='b', id='b'>
+        </div>
+
+        <div>
+            <p>c</p>
+            <input type='text' name='c', id='c'>
+        </div>
+
+        <div>
+            <p>d</p>
+            <input type='text' name='d', id='d'>
+        </div>
+
+        <input type='submit' value='predict'>
+    </form>
+
+    <h2>GET Predict: {{pred}}</h2>
+</div>
+{% endblock %}
