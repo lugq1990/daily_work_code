@@ -104,20 +104,21 @@ plt.show()
 
 from sklearn.datasets import load_iris
 from sklearn.tree import DecisionTreeClassifier
-from dtreeviz.trees import *
+from dtreeviz.trees import dtreeviz
 
 x, y = load_iris(return_X_y=True)
 dtc = DecisionTreeClassifier()
 dtc.fit(x, y)
 viz = dtreeviz(dtc, x, y, target_name='iris', feature_names=list('abcd'), orientation='LR', fancy=False)
-viz.view()
+# viz.view()
+path = r"C:\Users\guangqiang.lu\Documents\lugq\github_code\daily_work_code\PycharmProjects\leet_code\hands_on_test"
+viz.save(path)
 
 # explain
-print(explain_prediction_path(dtc, x[0], feature_names=list('abcd')), explanation_type='plain_english')
+# print(explain_prediction_path(dtc, x[0], feature_names=list('abcd')), explanation_type='plain_english')
 
 x_new = x[:, :2]
 dtc.fit(x_new, y)
-clfviz(dtc, x_new, y, feature_names=['x1', 'x2'], markers=['o', 'X', 's'], target_name='iris')
 
 from lightgbm import LGBMClassifier
 lgb = LGBMClassifier()

@@ -326,7 +326,7 @@ class UDFTransform:
         self.keywords = self._get_file_content(keyword_file_name)
         self.date_term = self._get_file_content(date_term_file_name)
             
-    def transform(self, contracts, return_df=True):
+    def transform(self, contracts, text_term="NonSolicitation", date_term='Normalized_NonSolicitationTerm', return_df=True):
         """Transform a list of data based on last index value as a list of clause text, add with `is_broad` as True or False at last.
 
         Args:
@@ -346,7 +346,7 @@ class UDFTransform:
         
         # Highlight: business logic filter here!
         for contract_id in contracts.keys():
-            is_broad, fail_reason = self._compare_term(contracts.get(contract_id))
+            is_broad, fail_reason = self._compare_term(contracts.get(contract_id), text_term=text_term, date_term=date_term)
             contracts.get(contract_id)["is_broad"] = is_broad
             contracts.get(contract_id)['broad_reason'] = fail_reason
 
@@ -356,7 +356,7 @@ class UDFTransform:
 
         return contracts
 
-    def _compare_term(self, metadata_dic, text_term="NonSolicitation", date_term='Normalized_NonSolicitationTerm', user_define_month_thre=18):
+    def _compare_term(self, metadata_dic, text_term, date_term, user_define_month_thre=18):
         """
         _compare_term Main compare function with implement for business logic.
 
@@ -402,6 +402,8 @@ class UDFTransform:
         clause_date = metadata_dic.get(date_term)
         if not clause_date:
             is_broad = True
+            fail_reason = fail_reason_dict.get('not_found_date')
+            return is_broad, fail_reason
         else:
             # get normalized term, if not with normalized type, then just pass as true, use `re` to get satisfied type
             groups = re.match(r"(\d+) (\w+)", clause_date).groups()
@@ -413,7 +415,7 @@ class UDFTransform:
             else:
                 months, month_type = int(groups[0]), groups[1]
                 if month_type != 'months':
-                    print("Get date type: {}, should be: months!".format(month_type))
+                    # print("Get date type: {}, should be: months!".format(month_type))
                     fail_reason = "Get date type: {}, should be: months!".format(clause_date)
                     return True, fail_reason
                 else:
@@ -422,7 +424,7 @@ class UDFTransform:
                     else:
                         is_broad = True
                         fail_reason = fail_reason_dict.get("date").format(str(clause_date))
-        return is_broad, fail_reason
+            return is_broad, fail_reason
     
     @staticmethod   
     def _get_file_content(file_name):
