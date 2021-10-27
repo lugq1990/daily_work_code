@@ -1,0 +1,10 @@
+google-cloud-storage
+google-cloud-pubsub
+selenium
+pandas
+azure-devops
+robotframework >= 3.1.1
+robotframework-seleniumlibrary >= 3.3.1
+openpyxl
+pymsteams
+protobuf >= 3.12.0

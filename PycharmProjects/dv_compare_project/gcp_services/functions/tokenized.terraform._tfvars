@@ -1,0 +1,7 @@
+gcp_credential_path                                 = "#{GCP_PROJECT_CREDENTIAL_FILE_PATH}#"
+gcp_project_id                                      = "#{GCP_PROJECT_ID}#"
+tf_release_id 	                                    = "#{TOOL_TF_RELEASE_ID}#"
+gcp_bd_service_account                              = "#{GCP_BD_SERVICE_ACCOUNT}#"
+gcp_owner_service_account                           = "#{GCP_OWNER_SERVICE_ACCOUNT}#"
+gcp_app_service_account                             = "#{GCP_APP_SERVICE_ACCOUNT}#"
+max_instances                                       = "#{MAX_INSTANCES}#"

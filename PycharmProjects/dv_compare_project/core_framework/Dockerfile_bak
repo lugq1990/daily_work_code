@@ -1,0 +1,58 @@
+#Base image
+#FROM ubuntu
+FROM acncio.azurecr.io/ubuntu20.04cio-base:latest
+LABEL version="latest" maintainer="Colin  <z.liang@accenture.com>"
+
+#change to root user
+USER root:root
+
+#forbiden tzdata interactivate
+ENV DEBIAN_FRONTEND=noninteractive
+
+#update the image
+RUN apt-get update
+
+#install python
+RUN apt install -y python3
+RUN apt install -y python3-pip
+
+#The followig are needed for Chrome and Chromedriver installation
+RUN apt-get install -y xvfb 
+RUN apt-get install -y zip 
+RUN apt-get install -y wget 
+RUN apt-get install ca-certificates 
+RUN apt-get install -y vim
+RUN apt-get install -y libgbm1 libnss3-dev libasound2 libxss1 libappindicator3-1 libindicator7 gconf-service libgconf-2-4 libpango1.0-0 xdg-utils fonts-liberation
+RUN apt-get install -y libcurl3-gnutls libcurl3-nss libcurl4
+RUN wget https://dl.google.com/linux/direct/google-chrome-stable_current_amd64.deb 
+RUN dpkg -i google-chrome*.deb 
+RUN rm google-chrome*.deb
+#RUN wget -N http://chromedriver.storage.googleapis.com/90.0.4430.24/chromedriver_linux64.zip
+RUN wget -q https://chromedriver.storage.googleapis.com/$(wget -q -O - https://chromedriver.storage.googleapis.com/LATEST_RELEASE)/chromedriver_linux64.zip
+RUN unzip chromedriver_linux64.zip
+RUN chmod +x chromedriver
+RUN cp ./chromedriver /usr/local/bin
+RUN rm chromedriver_linux64.zip
+# Remove the packages which has vulnerabilities
+RUN apt-get autoremove -y binutils
+RUN apt-get autoremove -y zip
+RUN apt-get autoremove -y wget
+RUN apt-get autoremove -y libxml2
+RUN apt-get autoremove -y libxml-twig-perl
+#RUN apt-get -f autoremove -y --allow-remove-essential tar
+#RUN apt-get -f autoremove -y --allow-remove-essential dbus
+#RUN apt-get -f autoremove -y --allow-remove-essential patch
+#RUN apt-get autoremove -y --allow-remove-essential libgcrypt20
+
+
+
+
+WORKDIR /app
+COPY . /app
+
+#install seleniumlibrary
+RUN pip3 install --trusted-host pypi.python.org -r requirements.txt
+
+RUN chmod a+x run.sh
+ENTRYPOINT ["./run.sh"]
+# CMD ["python3", "robot_auto_test.py", "devops_testcases/test_case.robot"]
