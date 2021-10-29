@@ -8,6 +8,7 @@ import datetime
 import pytz
 import string
 import re
+import unicodedata
 
 
 def main(event, context):
@@ -105,22 +106,40 @@ def _frac_words(text):
 
 
 def _remove_number_symbol(sample_list):
+    """
+    _remove_number_symbol 2 ways to solve this problem:
+    1. pattern based -> comment out => fast but not tested on full use case
+    2. character based -> unicodedata.category => slow
+
+    Args:
+        sample_list ([type]): [description]
+
+    Returns:
+        [type]: [description]
+    """
     pattern = r'[^A-Za-z0-9À-ÖØ-öø-ÿ/]+'
     out_sample = []
     for sample in sample_list:
-        if not sample.isascii():
-            r = ""
-            for x in sample:
-                if not x.isdigit() and x not in string.punctuation:
-                    r += x
-            if r == '':
-                continue
-            out_sample.append(r)
-        else:
-            lat_res = ' '.join([x for x in [re.sub(pattern, '', sp) for sp in sample.split(' ')] if not x.isdigit() and x !=''])
-            if lat_res == '':
-                continue
-            out_sample.append(lat_res)
+        # if not sample.isascii():
+        #     r = ""
+        #     for x in sample:
+        #         if not x.isdigit() and x not in string.punctuation:
+        #             r += x
+        #     if r == '':
+        #         continue
+        #     out_sample.append(r)
+        # else:
+            # lat_res = ' '.join([x for x in [re.sub(pattern, '', sp) for sp in sample.split(' ')] if not x.isdigit() and x !=''])
+        lat_res = ''
+        for s in sample:
+            ty = unicodedata.category(s).lower()
+            if ty.startswith('l') or ty.startswith('z') or (s in [',','.']):
+                lat_res += s
+        
+        lat_res = ' '.join([x for x in lat_res.split() if x != ''])
+        if lat_res == '':
+            continue
+        out_sample.append(lat_res)
     return out_sample
             
 
@@ -204,6 +223,12 @@ def detectedLanguageAPI(text, client, parent):
     
         
     
+if __name__ == '__main__':
+    s = []
+    s.append("今天天气不错1232342#")
+    s.append("good day~##$#$#$#~ 1032932 ,how are you?")
+    s.append("29TEST$")
 
+    out = _remove_number_symbol(s)
 
-    
+    print(out)
