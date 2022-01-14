@@ -17,7 +17,7 @@ class DataCompareDESQLBase:
     def compare(self, sql1, sql2, schema_compare=True, **kwargs):
         """
         compare Compare two SQLs output without real data row compare.
-        
+
         Logic here:
             1. Get count of these 2 SQLs, if row number is not equal, False
             2. Get column number of 2 SQLs, if not equal then False
@@ -36,7 +36,7 @@ class DataCompareDESQLBase:
 
         if count_res_1 != count_res_2:
             return False
-        
+
         # 2. compare schema number.
         # todo: there should be a schema name and type compare if needed.
         if schema_compare:
@@ -47,7 +47,11 @@ class DataCompareDESQLBase:
             return schema_compare_res
 
         # 3. build compare SQL to comapre diff data number
-        compare_merge_sql = "({} except distinct {}) union all ({} except distinct {})".format(sql1, sql2, sql2, sql1)
+        compare_merge_sql = (
+            "({} except distinct {}) union all ({} except distinct {})".format(
+                sql1, sql2, sql2, sql1
+            )
+        )
         merge_res = self.client.query(compare_merge_sql).result()
 
         merge_total_num = merge_res.total_rows
@@ -69,7 +73,11 @@ class DataCompareDESQLBase:
         schema_2 = row_iter_2.schema
 
         if len(schema_1) != len(schema_2):
-            print("Schema length not equal, first: {} second: {}".format(len(schema_1), len(schema_2)))
+            print(
+                "Schema length not equal, first: {} second: {}".format(
+                    len(schema_1), len(schema_2)
+                )
+            )
             return False
 
         def _get_diff_lists(lst1, lst2):
@@ -79,12 +87,14 @@ class DataCompareDESQLBase:
             diff_list_2 = list(set(lst2) - common_set)
 
             return diff_list_1, diff_list_2
-        
+
         if compare_name:
             schema_name_list_1 = [s.name for s in schema_1]
             schema_name_list_2 = [s.name for s in schema_2]
 
-            diff_schema_1, diff_schema_2 = _get_diff_lists(schema_name_list_1, schema_name_list_2)
+            diff_schema_1, diff_schema_2 = _get_diff_lists(
+                schema_name_list_1, schema_name_list_2
+            )
 
             if diff_schema_1 or diff_schema_2:
                 return False
@@ -92,15 +102,17 @@ class DataCompareDESQLBase:
         if compare_type:
             schema_type_list_1 = [s.field_type for s in schema_1]
             schema_type_list_2 = [s.field_type for s in schema_2]
-            diff_type_1, diff_type_2 = _get_diff_lists(schema_type_list_1, schema_type_list_2)
+            diff_type_1, diff_type_2 = _get_diff_lists(
+                schema_type_list_1, schema_type_list_2
+            )
 
             if diff_type_1 or diff_type_2:
                 return False
-        
+
         return True
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     sql_1 = "select clientcountry, documentid from `sbx-65343-autotest13--199c6387.alice_insights_30899.dashboard_metadata_acc_vw`"
     sql_2 = "select clientcountry, documentid as t from `sbx-65343-autotest13--199c6387.alice_insights_30899.dashboard_metadata_acc_vw` group by documentid, clientcountry"
     tmp_sql = "select count(1) as t from `sbx-65343-autotest13--199c6387.alice_insights_30899.dashboard_metadata_acc_vw`"

@@ -9,7 +9,7 @@ from utils.convert_df_util import ConvertDataFrames
 from utils.compare import CompareDataframes
 from utils.pubsub_util import PublishMessage
 
-warnings.simplefilter('ignore')
+warnings.simplefilter("ignore")
 
 
 class DataCamparationDV:
@@ -21,7 +21,8 @@ class DataCamparationDV:
         2. Convert them into same format based on each data type
         3. Comparation between them
     """
-    def compare(self, json_obj,  bq_sql):
+
+    def compare(self, json_obj, bq_sql):
         df_bq = BQDataframe().get(bq_sql)
         df_json = JSONDataframe().get(json_obj)
 

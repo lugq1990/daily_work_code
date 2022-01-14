@@ -34,5 +34,8 @@ class JSONDataframe:
 
             return df
         except ValueError as e:
-            raise ValueError("Please check Pubsub message's data, when try to get DataFrame from JSON get error: {}".format(e))
-        
+            raise ValueError(
+                "Please check Pubsub message's data, when try to get DataFrame from JSON get error: {}".format(
+                    e
+                )
+            )

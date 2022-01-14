@@ -29,24 +29,30 @@ class ConvertDataFrames:
     def convert_date_cols(self):
         """To convert datetime columns to be same format
 
-        If both of them are date type, then we could use pandas.to_datetime try to convert them into a normal datetime, 
+        If both of them are date type, then we could use pandas.to_datetime try to convert them into a normal datetime,
         and they will be same,otherwise we will get error then should be False returned.
-        """        
+        """
         # change here, in case that there are other types of datetime.
         # with func: `select_dtype` for robost selection of date
-        sati_date_types = ['datetime64', 'timedelta64', 'datetime64[ns]']
-        
+        sati_date_types = ["datetime64", "timedelta64", "datetime64[ns]"]
+
         tmp_date_df_bq = self.df_bq.select_dtypes(sati_date_types)
 
         if tmp_date_df_bq.shape[0] == 0:
             # there isn't any datetime columns, just return
-            return 
-        
+            return
+
         sati_date_cols = list(tmp_date_df_bq.columns)
-        print("Get columns: {} with datetime to process.".format('\t'.join(sati_date_cols)))
+        print(
+            "Get columns: {} with datetime to process.".format(
+                "\t".join(sati_date_cols)
+            )
+        )
 
         self.df_bq[sati_date_cols] = self.df_bq[sati_date_cols].apply(pd.to_datetime)
-        self.df_json[sati_date_cols] = self.df_json[sati_date_cols].apply(pd.to_datetime)
+        self.df_json[sati_date_cols] = self.df_json[sati_date_cols].apply(
+            pd.to_datetime
+        )
 
     # Here should add a function that convert float, the reason add this function
     # is that for 0.5 with only rounding with return 0, in fact we want 1 to be returned.
@@ -56,9 +62,7 @@ class ConvertDataFrames:
             ctx.rounding = ROUND_HALF_UP
             return float(round(Decimal(x), n_keep_digists))
 
-    def convert_percen_cols(self,
-                        float_round_estimation = 4,
-                        per_threshould = .9):
+    def convert_percen_cols(self, float_round_estimation=4, per_threshould=0.9):
         """This is a Pipeline, DF's dtype will be same after we have processed.
 
         Args:
@@ -72,12 +76,11 @@ class ConvertDataFrames:
         """
         same_dtype_cols, _ = self.get_same_diff_type_cols()
         other_not_sati_cols = list(set(list(self.df_bq.columns)) - set(same_dtype_cols))
-        
+
         if len(other_not_sati_cols) == 0:
             print("There isn't not others type of columns in BigQuery DataFrame.")
-            return 
-        
-        
+            return
+
         other_sati_json_df = self.df_json[other_not_sati_cols].astype(str)
         other_sati_bq_df = self.df_bq[other_not_sati_cols]
 
@@ -85,7 +88,9 @@ class ConvertDataFrames:
         # todo: for column: 1. remove nan; 2. map(lambda x: '%' in x).reduce(sum)
         percen_cols = []
         for col in other_sati_json_df.columns:
-            per_num = other_sati_json_df[col].map(lambda x: True if "%" in x else False).sum()
+            per_num = (
+                other_sati_json_df[col].map(lambda x: True if "%" in x else False).sum()
+            )
             null_num = other_sati_json_df[col].isnull().sum()
             if per_num:
                 if null_num:
@@ -94,30 +99,42 @@ class ConvertDataFrames:
                 else:
                     if per_num / len(other_sati_json_df) >= per_threshould:
                         percen_cols.append(col)
-        
+
         if len(percen_cols) == 0:
             print("There isn't percentage columns in JSON DataFrame.")
-            return 
-        
-        print("Get columns: {} as Percentage column to process.".format('\t'.join(percen_cols)))
-            
+            return
+
+        print(
+            "Get columns: {} as Percentage column to process.".format(
+                "\t".join(percen_cols)
+            )
+        )
+
         # If we have get percentage columns, then need to convert them into float
-        other_sati_json_df[percen_cols] = other_sati_json_df[percen_cols].applymap(lambda x: float(x.replace('%', ''))/100)
-        
+        other_sati_json_df[percen_cols] = other_sati_json_df[percen_cols].applymap(
+            lambda x: float(x.replace("%", "")) / 100
+        )
+
         # Key notes here: WE SHOULDN'T COMPARE FLOAT, SHOULD CONVERT INTO STRING!
         # convert BQ df either, so could compare easy...Let's just hard-code this for 4-digits to keep
-        per_convert_json = other_sati_json_df[percen_cols].applymap(lambda x: "%.4f" %  round(x, float_round_estimation))
-        
+        per_convert_json = other_sati_json_df[percen_cols].applymap(
+            lambda x: "%.4f" % round(x, float_round_estimation)
+        )
+
         # Here I add with rounding logic that will convert float into rounding logic, but only for BQ DF only!
-        other_sati_bq_df[percen_cols] = other_sati_bq_df[percen_cols].applymap(lambda x: self.convert_float_round(x))
-        
-        per_convert_bq = other_sati_bq_df[percen_cols].applymap(lambda x: "%.4f" % round(x, float_round_estimation))
+        other_sati_bq_df[percen_cols] = other_sati_bq_df[percen_cols].applymap(
+            lambda x: self.convert_float_round(x)
+        )
+
+        per_convert_bq = other_sati_bq_df[percen_cols].applymap(
+            lambda x: "%.4f" % round(x, float_round_estimation)
+        )
 
         # write these columns back with these new DFs.
         self.df_json[percen_cols] = per_convert_json
         self.df_bq[percen_cols] = per_convert_bq
-        
-        return 
+
+        return
 
     def convert_other_spe_cols(self):
         """As this is a pipeline, after each step process, then we will convert diff columns into same.
@@ -140,16 +157,19 @@ class ConvertDataFrames:
 
         if not other_str_cols:
             print("There isn't any other String columns to process.")
-            return 
-        
-        self.df_bq[other_str_cols] = self.df_bq[other_str_cols].applymap(lambda x: remove_spe_cha(x))
-        self.df_json[other_str_cols] = self.df_json[other_str_cols].applymap(lambda x: remove_spe_cha(x))
+            return
 
-        return 
+        self.df_bq[other_str_cols] = self.df_bq[other_str_cols].applymap(
+            lambda x: remove_spe_cha(x)
+        )
+        self.df_json[other_str_cols] = self.df_json[other_str_cols].applymap(
+            lambda x: remove_spe_cha(x)
+        )
+
+        return
 
     def convert(self, df_json, df_bq):
-        """Compare logic is first to convert date, then will %, rest is others.
-        """
+        """Compare logic is first to convert date, then will %, rest is others."""
         self.df_json = df_json
         self.df_bq = df_bq
 
