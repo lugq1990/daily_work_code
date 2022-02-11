@@ -1,14 +1,11 @@
-from multiprocessing import Process, Lock
+from flask import Flask, json
 
-def f(l, i):
-    l.acquire()
-    try:
-        print('hello world', i)
-    finally:
-        l.release()
+app = Flask(__name__)
+
+@app.route('/hello')
+def hello():
+    return json.dumps({"greeting": 'hello flask'})
+
 
 if __name__ == '__main__':
-    lock = Lock()
-
-    for num in range(10):
-        Process(target=f, args=(lock, num)).start()
+    app.run(debug=True)

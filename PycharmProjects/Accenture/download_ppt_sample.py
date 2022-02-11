@@ -1,10 +1,11 @@
+"""Automate download PPT files from website using selenium."""
 import os
 import zipfile
 import shutil
 
 import os
 import time
-import patoolib 
+# import patoolib 
 
 from selenium.webdriver import Chrome
 
@@ -138,7 +139,7 @@ def extract_rar_file(file_path):
     
 # copy download folder files into current folder
 
-def move_download_to_target_folder(target_folder, keep_file_type='pptx'):
+def move_download_to_target_folder(org_path, target_folder, keep_file_type='pptx'):
     org_path = r"C:\Users\gqian\Downloads"
 
     files = [x for x in os.listdir(org_path) if x.endswith(".zip")]
@@ -199,8 +200,8 @@ def pipeline_download(url, second_url, target_folder, start_page=2, end_page=5):
     # real donwload happens here!
     try:
         download_one_kind(url_links)
-    except:
-        pass
+    except Exception as e:
+        print("When try to download get error: {}".format(e))
     
     print("End of pipeline!")
     
@@ -217,7 +218,6 @@ if __name__ == '__main__':
     end=6
 
     pipeline_download(url,  second_url, target_folder, start_page=start, end_page=end)
-    
     
     
     # PPT模板
