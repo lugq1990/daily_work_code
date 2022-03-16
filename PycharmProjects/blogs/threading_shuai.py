@@ -68,3 +68,7 @@ if __name__ == '__main__':
     print("End of main thread")
 
     from gensim.models import Word2Vec
+    import eli5
+    
+    import shap
+    shap.Explainer
