@@ -9,24 +9,48 @@ from pyspark.sql.types import StringType
 import argparse
 
 
-broker = "localhost:9092"
-hdfs_root_path = "."
+broker = "IT-Kafka-Node01:9092"
+hdfs_root_path = "hdfs://10.11.16.36:8020/user/root/checkpoint_monitor"
+hash_value_output_path = hdfs_root_path + "/hash_value_kafka"
+
+global output_path
+global spark
 
 
-spark = SparkSession.builder.config("spark.driver.memoryOverhead", 512).config("spark.executor.memoryOverhead", 512).getOrCreate()
-spark.sparkContext.setLogLevel('warn')
+def init_spark(app_name=None):
+    """change this for changing spark application name."""
+    if not app_name:
+        app_name = "kafka_monitor"
+    spark = SparkSession.builder.appName(app_name)\
+        .config("spark.executor.memoryOverhead", 2048)\
+            .config("spark.driver.memoryOverhead", 2048)\
+                .config("spark.streaming.kafka.maxRatePerPartition", 1000)\
+                    .config("spark.streaming.backpressure.enabled", "true").getOrCreate()
+    # spark = SparkSession.builder.getOrCreate()
+    spark.sparkContext.setLogLevel('warn')
+    spark.conf.set("spark.sql.sources.partitionOverwriteMode", "dynamic")
+    return spark
 
 
 def hash_value(data):
     if isinstance(data, str):
         data = data.encode('utf-8')
-    return md5(data).hexdigest()
+    return md5(data.encode('utf-8')).hexdigest()
 
 
-def convert_timestamp_to_str(timestamp, date_format='%Y-%m-%d'):
-    "convert timestamp to date_format str."
-    return datetime.strftime(timestamp, date_format)
+# def convert_timestamp_to_str(timestamp, date_format='%Y-%m-%d'):
+#     "convert timestamp to date_format str."
+#     return datetime.strftime(timestamp, date_format)
     
+def convert_timestamp_to_str(timestamp):
+    "Current version of spark not support datetime convert, so just try to use string."
+    time_str = str(timestamp)
+    if " " in time_str:
+        date_str = time_str.split(" ")[0]
+    else:
+        date_str = ""
+    return date_str
+
 
 hash_value = functions.udf(hash_value, StringType())
 convert_timestamp_to_str = functions.udf(convert_timestamp_to_str, StringType())
@@ -82,29 +106,31 @@ def write_to_file(df, batch_id):
     df = convert_df(df, batch_id=batch_id)
     
     # output path of converted hash value.
-    output_path = hdfs_root_path + "/hash_value_kafka"
-    df.write.mode('append').partitionBy("ds", "batch_id").json(output_path)
+    df.write.mode('overwrite').partitionBy("ds", "batch_id").parquet(output_path)
 
 
-def spark_running(topic="topic_spark", read_data_mode="earliest"):
+def spark_running(topic="topic_spark", read_data_mode="latest"):
     # noted: kafka.group.id is noly useful for spark 3.0v
+    print("Start to extract message from topic: {}".format(topic))
     df = spark\
         .readStream \
         .format("kafka") \
         .option("kafka.bootstrap.servers", broker) \
+        .option("max.poll.records", 25600) \
+        .option("maxOffsetsPerTrigger", "25600")\
         .option("failOnDataLoss", "false")\
         .option("subscribe", topic) \
         .option("startingOffsets", read_data_mode) \
         .load()
         
     # with each topic should with each checkpiont!
-    checkpoint_path = "checkpoint_monitor_" + topic 
+    checkpoint_path = hash_value_output_path + "/checkpoint_monitor/" + topic 
     
     query = df.selectExpr("CAST(key AS STRING)", "CAST(value AS STRING)", "timestamp") \
         .writeStream \
         .option("checkpointLocation", checkpoint_path)\
-        .trigger(processingTime="10 seconds") \
-        .foreachBatch(lambda df, batch_id: write_to_file(df, batch_id=batch_id))\
+        .trigger(processingTime="100 seconds") \
+        .foreachBatch(lambda df, batch_id: write_to_file(df, batch_id))\
         .start()
 
     query.awaitTermination()
@@ -119,4 +145,9 @@ if __name__ == "__main__":
     
     topic_read = args.topic
     
+    output_path = hash_value_output_path + "/{}".format(topic_read)
+    # init spark with topic_name
+    app_name = "kafka_monitor_{}".format(topic_read)
+    init_spark(app_name)
+
     spark_running(topic=topic_read)

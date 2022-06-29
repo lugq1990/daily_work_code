@@ -1,4 +1,9 @@
-"""Read kafka message with value string hashed, partition by ds and batch_id"""
+"""Read kafka message with value string hashed, partition by ds and batch_id.
+
+There is one thing should be taken into consideration: 
+    which columns should be added as final output.
+
+"""
 from pyspark.sql import SparkSession
 from pyspark.sql import functions
 from datetime import datetime
@@ -43,26 +48,17 @@ def write_to_file(df, batch_id):
 
     date_str = now.strftime('%Y%m%d')
     df = df.withColumn("batch_id", functions.lit(batch_id)
-                       ).withColumn("ds", functions.lit(date_str))
-
-    # add with hash value
-    # df = df.withColumn("hash_value", hash_value(functions.col("value")))
-
-    # add current time string
-    # time_str = now.strftime("%Y-%m-%d %H:%M:%S")
-    # df = df.withColumn("current_time", functions.lit(time_str))
-    
-    # only get what we want
-    # df = df.select(["ds", "batch_id", "hash_value"])    
+                       ).withColumn("ds", functions.lit(date_str)) 
 
     df.write.mode('append').partitionBy("ds", "batch_id").json("batch_out_row")
 
 
 def spark_running():
     # with each topic should with each checkpiont!
-    query = df.selectExpr("CAST(key AS STRING)", "CAST(value AS STRING)") \
+    # todo: which columns are added into final output, add them here except value
+    query = df.selectExpr("CAST(key AS STRING)", "CAST(value AS STRING)", "cast(timestamp as string)") \
         .writeStream \
-        .option("checkpointLocation", "topic_spark_checkpoint_row")\
+        .option("checkpointLocation", "checkpoint_row_streaming")\
         .trigger(processingTime="10 seconds") \
         .foreachBatch(write_to_file)\
         .start()

@@ -1,4 +1,8 @@
+"""Read kafka message with python package: confluent-kafka,
 
+Logic here is just to load each message and do some transformation and dump it to disk.
+We could try to use Spark to replace it as it's faster as a distributed engine.
+"""
 from confluent_kafka import Consumer
 from datetime import date, datetime
 import os
