@@ -25,6 +25,8 @@ spark = SparkSession.builder\
     .config("spark.driver.extraClassPath", "/Users/guangqianglu/Downloads/mysql-connector-java-8.0.28.jar").getOrCreate()
 
 # this is workable!
+# as we want to accelerate reading, when there isn't column that could be partition, then could use this:
+partition_sql = "(select mod(row_number(), 64) as NUMERIC_COL, * from bigdatatable) as foo"
 sql = "(select * from test_jdbc where name = 'lu') as t"
 df = spark.read.format('jdbc').options(url="jdbc:mysql://localhost:3306/spark", 
                                        driver='com.mysql.cj.jdbc.Driver', 
