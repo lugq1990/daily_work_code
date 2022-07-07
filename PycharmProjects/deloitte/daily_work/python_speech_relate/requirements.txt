@@ -1,0 +1,5 @@
+gTTS
+pyttsx3
+playsound
+speechrecognition
+ffmpeg-python
