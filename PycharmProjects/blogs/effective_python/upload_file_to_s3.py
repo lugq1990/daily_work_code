@@ -1,7 +1,6 @@
 import boto3
 
-AWSAccessKeyId='AKIAJT5GQWQZZN7KJ67A'
-AWSSecretKey='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'
+
 
 # s3_client = boto3.client("s3", aws_access_key_id=AWSAccessKeyId, aws_secret_access_key=AWSSecretKey, verify=False)
 # s3 = boto3.resource("s3")
