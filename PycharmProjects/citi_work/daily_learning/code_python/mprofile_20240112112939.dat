@@ -1,0 +1,5 @@
+CMDLINE /Users/guangqianglu/anaconda3/envs/big_data/bin/python test_memory_proflier.py
+MEM 0.484375 1705030179.8641
+MEM 30.593750 1705030179.9672
+MEM 48.265625 1705030180.0723
+MEM 56.125000 1705030180.1775
